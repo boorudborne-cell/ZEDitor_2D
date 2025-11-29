@@ -4,198 +4,64 @@ using UnityEngine;
 
 namespace MapEditor.Data
 {
-    /// <summary>
-    /// Configuration for a single tile type in the palette
-    /// </summary>
     [Serializable]
-    public class TilePaletteEntry
+    public class TileDefinition
     {
-        public string tileId;
+        public string id;
         public string displayName;
         public string category;
         public Sprite sprite;
-        public bool defaultHasCollision;
-        public Color previewColor; // Used when sprite is null
-        
-        public TilePaletteEntry()
-        {
-            previewColor = Color.white;
-        }
-        
-        public TilePaletteEntry(string id, string name, string category, bool hasCollision = false)
-        {
-            tileId = id;
-            displayName = name;
-            this.category = category;
-            defaultHasCollision = hasCollision;
-            previewColor = Color.white;
-        }
+        public bool hasCollision;
     }
     
-    /// <summary>
-    /// Configuration for an entity type
-    /// </summary>
     [Serializable]
-    public class EntityPaletteEntry
+    public class EntityDefinition
     {
-        public string entityType;
+        public string id;
         public string displayName;
         public string category;
         public Sprite icon;
-        public Color gizmoColor;
-        public Vector2 size;
-        
-        public EntityPaletteEntry()
-        {
-            gizmoColor = Color.yellow;
-            size = Vector2.one;
-        }
+        public Color gizmoColor = Color.yellow;
     }
     
-    /// <summary>
-    /// ScriptableObject containing all available tiles and entities for the editor
-    /// </summary>
     [CreateAssetMenu(fileName = "TilePalette", menuName = "Map Editor/Tile Palette")]
     public class TilePalette : ScriptableObject
     {
-        [Header("Tiles")]
-        public List<TilePaletteEntry> tiles = new List<TilePaletteEntry>();
+        public List<TileDefinition> tiles = new List<TileDefinition>();
+        public List<EntityDefinition> entities = new List<EntityDefinition>();
         
-        [Header("Entities")]
-        public List<EntityPaletteEntry> entities = new List<EntityPaletteEntry>();
+        private Dictionary<string, TileDefinition> _tileCache;
+        private Dictionary<string, EntityDefinition> _entityCache;
         
-        [Header("Categories")]
-        public List<string> tileCategories = new List<string> { "Ground", "Decoration", "Hazard" };
-        public List<string> entityCategories = new List<string> { "Player", "Enemy", "Collectible", "Trigger" };
-        
-        private Dictionary<string, TilePaletteEntry> _tileCache;
-        private Dictionary<string, EntityPaletteEntry> _entityCache;
-        
-        /// <summary>
-        /// Gets tile entry by ID with O(1) lookup
-        /// </summary>
-        public TilePaletteEntry GetTile(string tileId)
+        public TileDefinition GetTile(string id)
         {
-            if (_tileCache == null)
-                BuildCache();
-                
-            return _tileCache.TryGetValue(tileId, out var entry) ? entry : null;
+            if (_tileCache == null) BuildCache();
+            return _tileCache.TryGetValue(id, out var t) ? t : null;
         }
         
-        /// <summary>
-        /// Gets entity entry by type with O(1) lookup
-        /// </summary>
-        public EntityPaletteEntry GetEntity(string entityType)
+        public EntityDefinition GetEntity(string id)
         {
-            if (_entityCache == null)
-                BuildCache();
-                
-            return _entityCache.TryGetValue(entityType, out var entry) ? entry : null;
+            if (_entityCache == null) BuildCache();
+            return _entityCache.TryGetValue(id, out var e) ? e : null;
         }
         
-        /// <summary>
-        /// Gets all tiles in a category
-        /// </summary>
-        public List<TilePaletteEntry> GetTilesByCategory(string category)
+        public List<string> GetTileCategories()
         {
-            return tiles.FindAll(t => t.category == category);
-        }
-        
-        /// <summary>
-        /// Gets all entities in a category
-        /// </summary>
-        public List<EntityPaletteEntry> GetEntitiesByCategory(string category)
-        {
-            return entities.FindAll(e => e.category == category);
+            var cats = new HashSet<string>();
+            foreach (var t in tiles) if (!string.IsNullOrEmpty(t.category)) cats.Add(t.category);
+            return new List<string>(cats);
         }
         
         private void BuildCache()
         {
-            _tileCache = new Dictionary<string, TilePaletteEntry>();
-            foreach (var tile in tiles)
-            {
-                _tileCache[tile.tileId] = tile;
-            }
+            _tileCache = new Dictionary<string, TileDefinition>();
+            foreach (var t in tiles) _tileCache[t.id] = t;
             
-            _entityCache = new Dictionary<string, EntityPaletteEntry>();
-            foreach (var entity in entities)
-            {
-                _entityCache[entity.entityType] = entity;
-            }
+            _entityCache = new Dictionary<string, EntityDefinition>();
+            foreach (var e in entities) _entityCache[e.id] = e;
         }
         
-        private void OnEnable()
-        {
-            BuildCache();
-        }
-        
-        private void OnValidate()
-        {
-            BuildCache();
-        }
-        
-#if UNITY_EDITOR
-        /// <summary>
-        /// Creates a default palette with sample tiles (Editor only)
-        /// </summary>
-        [ContextMenu("Add Sample Tiles")]
-        private void AddSampleTiles()
-        {
-            tiles.Clear();
-            entities.Clear();
-            
-            // Sample ground tiles
-            tiles.Add(new TilePaletteEntry("ground_dirt", "Dirt", "Ground", true) 
-                { previewColor = new Color(0.5f, 0.3f, 0.1f) });
-            tiles.Add(new TilePaletteEntry("ground_grass", "Grass", "Ground", true) 
-                { previewColor = new Color(0.2f, 0.7f, 0.2f) });
-            tiles.Add(new TilePaletteEntry("ground_stone", "Stone", "Ground", true) 
-                { previewColor = Color.gray });
-            
-            // Sample decoration tiles
-            tiles.Add(new TilePaletteEntry("deco_flower", "Flower", "Decoration", false) 
-                { previewColor = Color.magenta });
-            tiles.Add(new TilePaletteEntry("deco_bush", "Bush", "Decoration", false) 
-                { previewColor = new Color(0.1f, 0.5f, 0.1f) });
-            
-            // Sample hazard tiles
-            tiles.Add(new TilePaletteEntry("hazard_spike", "Spike", "Hazard", true) 
-                { previewColor = Color.red });
-            tiles.Add(new TilePaletteEntry("hazard_lava", "Lava", "Hazard", true) 
-                { previewColor = new Color(1f, 0.3f, 0f) });
-            
-            // Sample entities
-            entities.Add(new EntityPaletteEntry 
-            { 
-                entityType = "player_spawn", 
-                displayName = "Player Spawn", 
-                category = "Player",
-                gizmoColor = Color.green 
-            });
-            entities.Add(new EntityPaletteEntry 
-            { 
-                entityType = "enemy_walker", 
-                displayName = "Walking Enemy", 
-                category = "Enemy",
-                gizmoColor = Color.red 
-            });
-            entities.Add(new EntityPaletteEntry 
-            { 
-                entityType = "coin", 
-                displayName = "Coin", 
-                category = "Collectible",
-                gizmoColor = Color.yellow 
-            });
-            entities.Add(new EntityPaletteEntry 
-            { 
-                entityType = "checkpoint", 
-                displayName = "Checkpoint", 
-                category = "Trigger",
-                gizmoColor = Color.cyan 
-            });
-            
-            BuildCache();
-        }
-#endif
+        private void OnEnable() => BuildCache();
+        private void OnValidate() => _tileCache = null;
     }
 }

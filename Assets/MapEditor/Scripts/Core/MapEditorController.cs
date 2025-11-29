@@ -1,446 +1,188 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 using MapEditor.Data;
 using MapEditor.Services;
 
 namespace MapEditor.Core
 {
-    /// <summary>
-    /// Main controller for the map editor
-    /// Coordinates between UI, tools, and services
-    /// </summary>
     public class MapEditorController : MonoBehaviour
     {
-        [Header("Configuration")]
-        [SerializeField] private TilePalette tilePalette;
-        [SerializeField] private int defaultMapWidth = 50;
-        [SerializeField] private int defaultMapHeight = 30;
+        [SerializeField] private TilePalette palette;
+        [SerializeField] private int defaultWidth = 50;
+        [SerializeField] private int defaultHeight = 30;
         
-        [Header("Performance Settings")]
-        [SerializeField] private bool useAsyncFileOperations = true;
-        
-        // State and services
         public EditorState State { get; private set; }
-        public ToolManager Tools { get; private set; }
-        public TilePalette Palette => tilePalette;
+        public TilePalette Palette => palette;
         
         private MapFileService _fileService;
-        private CancellationTokenSource _currentOperation;
         
-        // Events
-        public event Action OnMapCreated;
-        public event Action OnMapLoaded;
-        public event Action OnMapSaved;
+        public event Action OnMapChanged;
         public event Action<string> OnError;
-        public event Action OnStateChanged;
-        public event Action<float> OnLoadProgress;
+        public event Action OnTilePlaced;
         
         private void Awake()
         {
             State = new EditorState();
             _fileService = new MapFileService();
-            
-            if (tilePalette != null)
-            {
-                Tools = new ToolManager(State, tilePalette);
-                Tools.SetTool(EditorTool.Brush);
-            }
-            else
-            {
-                Debug.LogWarning("[MapEditorController] No TilePalette assigned!");
-            }
         }
         
-        private void OnDestroy()
+        public void CreateMap(string name, int width = 0, int height = 0)
         {
-            _currentOperation?.Cancel();
-            _currentOperation?.Dispose();
-        }
-        
-        #region Map Operations
-        
-        /// <summary>
-        /// Creates a new empty map
-        /// </summary>
-        public void CreateNewMap(string mapName, int width, int height)
-        {
-            if (width <= 0 || height <= 0)
-            {
-                OnError?.Invoke("Invalid map dimensions");
-                return;
-            }
+            if (width <= 0) width = defaultWidth;
+            if (height <= 0) height = defaultHeight;
             
-            if (string.IsNullOrWhiteSpace(mapName))
-                mapName = "Untitled";
-            
-            // Cancel any pending operations
-            _currentOperation?.Cancel();
-            
-            State.Reset();
-            State.CurrentMap = MapData.CreateNew(mapName, width, height);
+            State.Map = MapData.Create(name, width, height);
+            State.CurrentFileName = null;
             State.HasUnsavedChanges = false;
             
-            Debug.Log($"[MapEditorController] Created new map: {mapName} ({width}x{height})");
+            // Center camera on map
+            State.CameraOffset = new Vector2(width / 2f, height / 2f);
             
-            OnMapCreated?.Invoke();
-            OnStateChanged?.Invoke();
+            // Select first tile if available
+            if (palette != null && palette.tiles.Count > 0)
+                State.SelectedTileId = palette.tiles[0].id;
+            
+            OnMapChanged?.Invoke();
+            State.NotifyChanged();
+            
+            Debug.Log($"[MapEditor] Created map '{name}' ({width}x{height}), selected tile: {State.SelectedTileId}");
         }
         
-        /// <summary>
-        /// Creates a new map with default dimensions
-        /// </summary>
-        public void CreateNewMap(string mapName)
+        public void SaveMap(string fileName = null)
         {
-            CreateNewMap(mapName, defaultMapWidth, defaultMapHeight);
-        }
-        
-        /// <summary>
-        /// Saves the current map
-        /// </summary>
-        public async void SaveMap(string fileName = null)
-        {
-            if (State.CurrentMap == null)
+            if (State.Map == null) { OnError?.Invoke("No map to save"); return; }
+            
+            fileName ??= State.CurrentFileName ?? State.Map.mapName;
+            if (string.IsNullOrEmpty(fileName)) { OnError?.Invoke("No filename"); return; }
+            
+            try
             {
-                OnError?.Invoke("No map to save");
-                return;
-            }
-            
-            fileName = fileName ?? State.CurrentFileName ?? State.CurrentMap.mapName;
-            
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                OnError?.Invoke("Please specify a file name");
-                return;
-            }
-            
-            CancelCurrentOperation();
-            
-            FileOperationResult result;
-            
-            if (useAsyncFileOperations)
-            {
-                _currentOperation = new CancellationTokenSource();
-                result = await _fileService.SaveMapAsync(State.CurrentMap, fileName, _currentOperation.Token);
-            }
-            else
-            {
-                result = _fileService.SaveMap(State.CurrentMap, fileName);
-            }
-            
-            if (result.Success)
-            {
+                _fileService.Save(State.Map, fileName);
                 State.CurrentFileName = fileName;
                 State.HasUnsavedChanges = false;
-                OnMapSaved?.Invoke();
-                OnStateChanged?.Invoke();
+                State.NotifyChanged();
             }
-            else
-            {
-                OnError?.Invoke(result.ErrorMessage);
-            }
+            catch (Exception e) { OnError?.Invoke(e.Message); }
         }
         
-        /// <summary>
-        /// Loads a map from file
-        /// </summary>
-        public async void LoadMap(string fileName)
+        public void LoadMap(string fileName)
         {
-            if (string.IsNullOrWhiteSpace(fileName))
+            try
             {
-                OnError?.Invoke("Please specify a file name");
-                return;
-            }
-            
-            CancelCurrentOperation();
-            
-            OnLoadProgress?.Invoke(0f);
-            
-            FileOperationResult result;
-            
-            if (useAsyncFileOperations)
-            {
-                _currentOperation = new CancellationTokenSource();
-                result = await _fileService.LoadMapAsync(fileName, _currentOperation.Token);
-            }
-            else
-            {
-                result = _fileService.LoadMap(fileName);
-            }
-            
-            OnLoadProgress?.Invoke(1f);
-            
-            if (result.Success)
-            {
-                State.Reset();
-                State.CurrentMap = result.Data;
+                var map = _fileService.Load(fileName);
+                if (map == null) { OnError?.Invoke("Failed to load"); return; }
+                
+                State.Map = map;
                 State.CurrentFileName = fileName;
                 State.HasUnsavedChanges = false;
-                
-                Debug.Log($"[MapEditorController] Loaded map in {result.LoadTime:F3}s");
-                
-                OnMapLoaded?.Invoke();
-                OnStateChanged?.Invoke();
+                OnMapChanged?.Invoke();
+                State.NotifyChanged();
             }
-            else
-            {
-                OnError?.Invoke(result.ErrorMessage);
-            }
+            catch (Exception e) { OnError?.Invoke(e.Message); }
         }
         
-        /// <summary>
-        /// Gets list of available map files
-        /// </summary>
-        public string[] GetAvailableMaps()
+        public string[] GetMapList() => _fileService.GetMapList();
+        
+        public void SetTool(EditorTool tool)
         {
-            return _fileService.GetAvailableMaps();
+            State.ActiveTool = tool;
+            State.NotifyChanged();
         }
         
-        /// <summary>
-        /// Deletes a map file
-        /// </summary>
-        public bool DeleteMap(string fileName)
-        {
-            if (_fileService.DeleteMap(fileName))
-            {
-                // If deleted current map, reset
-                if (State.CurrentFileName == fileName)
-                {
-                    State.Reset();
-                    OnStateChanged?.Invoke();
-                }
-                return true;
-            }
-            return false;
-        }
-        
-        #endregion
-        
-        #region Layer Operations
-        
-        /// <summary>
-        /// Sets the active layer for editing
-        /// </summary>
-        public void SetActiveLayer(LayerType layer)
+        public void SetLayer(LayerType layer)
         {
             State.ActiveLayer = layer;
-            OnStateChanged?.Invoke();
+            State.NotifyChanged();
         }
         
-        /// <summary>
-        /// Toggles layer visibility
-        /// </summary>
-        public void SetLayerVisibility(LayerType layer, bool visible)
-        {
-            if (State.CurrentMap == null)
-                return;
-            
-            var layerData = State.CurrentMap.GetLayer(layer);
-            if (layerData != null)
-            {
-                layerData.isVisible = visible;
-                OnStateChanged?.Invoke();
-            }
-        }
-        
-        /// <summary>
-        /// Clears all tiles from a layer
-        /// </summary>
-        public void ClearLayer(LayerType layer)
-        {
-            if (State.CurrentMap == null)
-                return;
-            
-            var layerData = State.CurrentMap.GetLayer(layer);
-            if (layerData != null)
-            {
-                layerData.Clear();
-                State.HasUnsavedChanges = true;
-                OnStateChanged?.Invoke();
-            }
-        }
-        
-        #endregion
-        
-        #region View Operations
-        
-        /// <summary>
-        /// Zooms in the editor view
-        /// </summary>
-        public void ZoomIn()
-        {
-            State.ZoomIn();
-            OnStateChanged?.Invoke();
-        }
-        
-        /// <summary>
-        /// Zooms out the editor view
-        /// </summary>
-        public void ZoomOut()
-        {
-            State.ZoomOut();
-            OnStateChanged?.Invoke();
-        }
-        
-        /// <summary>
-        /// Sets zoom level directly
-        /// </summary>
-        public void SetZoom(float zoom)
-        {
-            State.Zoom = Mathf.Clamp(zoom, EditorState.MIN_ZOOM, EditorState.MAX_ZOOM);
-            OnStateChanged?.Invoke();
-        }
-        
-        /// <summary>
-        /// Toggles grid visibility
-        /// </summary>
-        public void ToggleGrid()
-        {
-            State.ShowGrid = !State.ShowGrid;
-            OnStateChanged?.Invoke();
-        }
-        
-        /// <summary>
-        /// Toggles collision visualization
-        /// </summary>
-        public void ToggleCollisions()
-        {
-            State.ShowCollisions = !State.ShowCollisions;
-            OnStateChanged?.Invoke();
-        }
-        
-        /// <summary>
-        /// Sets camera position
-        /// </summary>
-        public void SetCameraPosition(Vector2 position)
-        {
-            State.CameraPosition = position;
-            OnStateChanged?.Invoke();
-        }
-        
-        /// <summary>
-        /// Centers view on map
-        /// </summary>
-        public void CenterView()
-        {
-            if (State.CurrentMap == null)
-                return;
-            
-            State.CameraPosition = new Vector2(
-                State.CurrentMap.width * State.CurrentMap.tileSize / 2f,
-                State.CurrentMap.height * State.CurrentMap.tileSize / 2f
-            );
-            OnStateChanged?.Invoke();
-        }
-        
-        #endregion
-        
-        #region Tool Operations
-        
-        /// <summary>
-        /// Selects a tile from the palette
-        /// </summary>
         public void SelectTile(string tileId)
         {
             State.SelectedTileId = tileId;
-            State.SelectedEntityType = null;
+            State.ActiveTool = EditorTool.Brush;
+            State.NotifyChanged();
+        }
+        
+        public void SelectEntity(string entityId)
+        {
+            State.SelectedEntityId = entityId;
+            State.ActiveTool = EditorTool.Entity;
+            State.NotifyChanged();
+        }
+        
+        // Called when user clicks/drags on canvas
+        public void ApplyToolAt(Vector2Int pos)
+        {
+            if (State.Map == null) return;
             
-            if (State.ActiveTool == EditorTool.EntityPlace || State.ActiveTool == EditorTool.EntitySelect)
+            var layer = State.Map.GetLayer(State.ActiveLayer);
+            if (layer == null) return;
+            
+            switch (State.ActiveTool)
             {
-                Tools.SetTool(EditorTool.Brush);
-            }
-            
-            OnStateChanged?.Invoke();
-        }
-        
-        /// <summary>
-        /// Selects an entity type for placement
-        /// </summary>
-        public void SelectEntity(string entityType)
-        {
-            State.SelectedEntityType = entityType;
-            State.SelectedTileId = null;
-            Tools.SetTool(EditorTool.EntityPlace);
-            OnStateChanged?.Invoke();
-        }
-        
-        /// <summary>
-        /// Sets the active tool
-        /// </summary>
-        public void SetTool(EditorTool tool)
-        {
-            Tools.SetTool(tool);
-            OnStateChanged?.Invoke();
-        }
-        
-        #endregion
-        
-        #region Input Handling
-        
-        /// <summary>
-        /// Converts screen position to tile coordinates
-        /// </summary>
-        public Vector2Int ScreenToTile(Vector2 screenPosition, Camera camera)
-        {
-            if (State.CurrentMap == null || camera == null)
-                return Vector2Int.zero;
-            
-            Vector3 worldPos = camera.ScreenToWorldPoint(screenPosition);
-            float tileSize = State.CurrentMap.tileSize;
-            
-            return new Vector2Int(
-                Mathf.FloorToInt(worldPos.x / tileSize),
-                Mathf.FloorToInt(worldPos.y / tileSize)
-            );
-        }
-        
-        /// <summary>
-        /// Handles pointer down on canvas
-        /// </summary>
-        public void HandlePointerDown(Vector2Int tilePosition)
-        {
-            Tools?.OnPointerDown(tilePosition);
-        }
-        
-        /// <summary>
-        /// Handles pointer drag on canvas
-        /// </summary>
-        public void HandlePointerDrag(Vector2Int tilePosition)
-        {
-            Tools?.OnPointerDrag(tilePosition);
-        }
-        
-        /// <summary>
-        /// Handles pointer up on canvas
-        /// </summary>
-        public void HandlePointerUp(Vector2Int tilePosition)
-        {
-            Tools?.OnPointerUp(tilePosition);
-        }
-        
-        #endregion
-        
-        #region Utility
-        
-        private void CancelCurrentOperation()
-        {
-            if (_currentOperation != null)
-            {
-                _currentOperation.Cancel();
-                _currentOperation.Dispose();
-                _currentOperation = null;
+                case EditorTool.Brush:
+                    if (string.IsNullOrEmpty(State.SelectedTileId)) return;
+                    var tileDef = palette?.GetTile(State.SelectedTileId);
+                    layer.SetTile(new TileData
+                    {
+                        x = pos.x,
+                        y = pos.y,
+                        tileId = State.SelectedTileId,
+                        hasCollision = tileDef?.hasCollision ?? false
+                    });
+                    State.HasUnsavedChanges = true;
+                    OnTilePlaced?.Invoke();
+                    break;
+                    
+                case EditorTool.Eraser:
+                    if (layer.RemoveTile(pos))
+                    {
+                        State.HasUnsavedChanges = true;
+                        OnTilePlaced?.Invoke();
+                    }
+                    break;
+                    
+                case EditorTool.Entity:
+                    if (string.IsNullOrEmpty(State.SelectedEntityId)) return;
+                    State.Map.entities.Add(new EntityData
+                    {
+                        entityId = $"{State.SelectedEntityId}_{DateTime.Now.Ticks}",
+                        entityType = State.SelectedEntityId,
+                        x = pos.x,
+                        y = pos.y
+                    });
+                    State.HasUnsavedChanges = true;
+                    OnTilePlaced?.Invoke();
+                    break;
             }
         }
         
-        /// <summary>
-        /// Gets the maps directory path
-        /// </summary>
-        public string GetMapsDirectory()
+        public void SetHoveredTile(Vector2Int pos)
         {
-            return _fileService.GetMapsDirectory();
+            if (State.HoveredTile != pos)
+            {
+                State.HoveredTile = pos;
+                State.NotifyChanged();
+            }
         }
         
-        #endregion
+        public void Pan(Vector2 delta)
+        {
+            State.CameraOffset += delta;
+            State.NotifyChanged();
+        }
+        
+        public void Zoom(float delta)
+        {
+            State.SetZoom(State.Zoom + delta * 0.1f);
+        }
+        
+        public void ClearLayer(LayerType layer)
+        {
+            State.Map?.GetLayer(layer)?.Clear();
+            State.HasUnsavedChanges = true;
+            OnTilePlaced?.Invoke();
+        }
+        
+        public string GetMapsFolder() => _fileService.GetMapsFolder();
     }
 }

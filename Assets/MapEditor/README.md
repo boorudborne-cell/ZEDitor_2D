@@ -1,428 +1,238 @@
-# Runtime Map Editor для 2D-платформера
+# Runtime Map Editor — UI Toolkit Version
 
-Модульный редактор карт для Unity с UGUI интерфейсом, оптимизированный для работы с большими картами.
+## Быстрая установка
 
-## Содержание
+### 1. Импорт
 
-- [Возможности](#возможности)
-- [Системные требования](#системные-требования)
-- [Установка](#установка)
-- [Быстрый старт](#быстрый-старт)
-- [Архитектура](#архитектура)
-- [API Reference](#api-reference)
-- [Формат данных](#формат-данных)
-- [Оптимизация](#оптимизация)
+1. Скопируйте папку `MapEditor` в `Assets/`
+2. Дождитесь компиляции
 
-## Возможности
+### 2. Создание TilePalette
 
-### Управление файлами
-- ✅ Создание новой карты с заданными размерами
-- ✅ Сохранение карты в формат JSON
-- ✅ Загрузка существующей карты
-- ✅ Асинхронные операции для больших файлов
+1. **ПКМ в Project → Create → Map Editor → Tile Palette**
+2. Назовите `MainPalette`
+3. Добавьте тайлы:
+   - Нажмите `+` в секции Tiles
+   - Заполните: `id`, `displayName`, `category`, `sprite`, `hasCollision`
 
-### Инструменты рисования
-- ✅ **Кисть (Brush)**: Размещение тайлов с поддержкой перетаскивания
-- ✅ **Ластик (Eraser)**: Удаление тайлов
-- ✅ **Размещение сущностей**: Добавление игровых объектов
-- ✅ **Выбор сущностей**: Перемещение и удаление объектов
-
-### Работа со слоями
-- ✅ Три слоя: Background, Ground, Foreground
-- ✅ Переключение активного слоя
-- ✅ Управление видимостью слоев
-- ✅ Очистка слоя
-
-### Визуализация
-- ✅ Отображение/скрытие сетки
-- ✅ Визуализация коллизий
-- ✅ Масштабирование (0.25x - 4x)
-- ✅ Панорамирование камеры
-
-## Системные требования
-
-- Unity 2021.3 LTS или новее
-- TextMeshPro (входит в Unity)
-- .NET Standard 2.1
-
-## Установка
-
-1. Скопируйте папку `MapEditor` в `Assets/` вашего проекта
-2. Импортируйте TextMeshPro (Window > TextMeshPro > Import TMP Essential Resources)
-3. Создайте TilePalette asset: `Create > Map Editor > Tile Palette`
-
-## Быстрый старт
-
-### Вариант 1: Автоматическая настройка
-
-```csharp
-// Создайте пустой GameObject и добавьте компонент
-var setup = gameObject.AddComponent<MapEditor.Setup.MapEditorSetup>();
-setup.tilePalette = yourTilePalette; // Назначьте палитру
-// При старте сцены редактор создастся автоматически
+**Пример тайлов:**
+```
+id: grass          | displayName: Grass    | category: Ground | hasCollision: ✓
+id: dirt           | displayName: Dirt     | category: Ground | hasCollision: ✓
+id: stone          | displayName: Stone    | category: Ground | hasCollision: ✓
+id: spike          | displayName: Spike    | category: Hazard | hasCollision: ✓
+id: flower         | displayName: Flower   | category: Deco   | hasCollision: ✗
 ```
 
-### Вариант 2: Ручная настройка
+### 3. Настройка сцены
 
-1. Создайте GameObject с `MapEditorController`
-2. Создайте камеру с `ChunkedMapRenderer`
-3. Создайте Canvas с UI компонентами
-4. Настройте ссылки между компонентами
+Создайте иерархию объектов:
 
-### Использование API
-
-```csharp
-using MapEditor.Core;
-using MapEditor.Data;
-
-// Получение контроллера
-var controller = FindObjectOfType<MapEditorController>();
-
-// Создание новой карты
-controller.CreateNewMap("MyLevel", 100, 50);
-
-// Выбор инструмента
-controller.SetTool(EditorTool.Brush);
-
-// Выбор тайла для рисования
-controller.SelectTile("ground_grass");
-
-// Переключение слоя
-controller.SetActiveLayer(LayerType.Ground);
-
-// Сохранение
-controller.SaveMap("level_01");
-
-// Загрузка
-controller.LoadMap("level_01");
-
-// Управление видом
-controller.ZoomIn();
-controller.ZoomOut();
-controller.ToggleGrid();
-controller.ToggleCollisions();
+```
+[MapEditor]
+├── Controller        → MapEditorController
+├── Renderer          → TileMapRenderer
+├── InputHandler      → EditorInputHandler
+├── UI                → UIDocument + MapEditorUIController
+└── Main Camera       → Camera (Orthographic)
 ```
 
-## Архитектура
+#### 3.1 Controller (MapEditorController)
+
+1. Создайте пустой объект `Controller`
+2. Добавьте компонент `MapEditorController`
+3. Назначьте `Palette` → ваш `MainPalette`
+
+#### 3.2 Renderer (TileMapRenderer)
+
+1. Создайте пустой объект `Renderer`
+2. Добавьте компонент `TileMapRenderer`
+3. Назначьте `Controller` → объект Controller
+
+#### 3.3 InputHandler (EditorInputHandler)
+
+1. Создайте пустой объект `InputHandler`
+2. Добавьте компонент `EditorInputHandler`
+3. Назначьте `Controller` → объект Controller
+
+#### 3.4 UI (UIDocument)
+
+1. Создайте пустой объект `UI`
+2. Добавьте компонент `UIDocument`
+3. Назначьте:
+   - **Panel Settings** — создайте новый: `Create → UI Toolkit → Panel Settings Asset`
+   - **Source Asset** → `MapEditor/UI/MapEditorUI.uxml`
+4. Добавьте компонент `MapEditorUIController`
+5. Назначьте:
+   - **UI Document** → сам UIDocument
+   - **Controller** → объект Controller
+
+#### 3.5 Camera
+
+1. Выберите Main Camera
+2. Настройки:
+   - **Projection**: Orthographic
+   - **Size**: 5
+   - **Background**: тёмно-серый (#1a1a1a)
+
+### 4. Panel Settings
+
+Создайте Panel Settings Asset:
+
+1. **Create → UI Toolkit → Panel Settings Asset**
+2. Назовите `EditorPanelSettings`
+3. Настройки:
+   - **Scale Mode**: Scale With Screen Size
+   - **Reference Resolution**: 1920 x 1080
+   - **Match**: 0.5
+
+---
+
+## Использование
+
+### Запуск
+
+1. Play
+2. Нажмите **New** в тулбаре
+3. Введите имя, размеры карты
+4. **Create**
+
+### Рисование
+
+1. Выберите тайл в правой панели (кликните на спрайт)
+2. Кликайте или перетаскивайте по канвасу
+3. Под курсором отображается превью тайла
+
+### Инструменты
+
+| Кнопка | Клавиша | Действие |
+|--------|---------|----------|
+| Brush | B | Ставить тайлы |
+| Eraser | E | Удалять тайлы |
+| Entity | — | Ставить сущности |
+
+### Навигация
+
+| Действие | Управление |
+|----------|------------|
+| Масштаб | Колесо мыши / +/- |
+| Панорама | СКМ или Space + ЛКМ |
+| Центрировать | Home |
+
+### Слои
+
+- **Background** — задний фон (sortOrder: 0)
+- **Ground** — основной слой (sortOrder: 1)
+- **Foreground** — передний план (sortOrder: 2)
+
+### Сохранение
+
+- **Save** — сохраняет в `Application.persistentDataPath/Maps/`
+- **Load** — открывает список сохранённых карт
+- **Ctrl+S** — быстрое сохранение
+
+---
+
+## Структура проекта
 
 ```
 MapEditor/
 ├── Scripts/
-│   ├── Core/                    # Ядро редактора
-│   │   ├── MapEditorController  # Главный контроллер
-│   │   ├── EditorTools          # Базовые классы инструментов
-│   │   └── ToolImplementations  # Реализации инструментов
-│   │
-│   ├── Data/                    # Структуры данных
-│   │   ├── TileData            # Данные тайла
-│   │   ├── LayerData           # Данные слоя
-│   │   ├── MapData             # Данные карты
-│   │   └── TilePalette         # Палитра тайлов (ScriptableObject)
-│   │
-│   ├── Services/               # Сервисы
-│   │   └── MapFileService      # Сохранение/загрузка файлов
-│   │
-│   ├── Rendering/              # Рендеринг
-│   │   ├── MapRenderer         # Базовый рендерер
-│   │   └── ChunkedMapRenderer  # Оптимизированный чанковый рендерер
-│   │
-│   ├── UI/                     # Интерфейс
-│   │   ├── EditorUIPanel       # Главная панель
-│   │   ├── TilePalettePanel    # Палитра тайлов
-│   │   ├── LayerPanel          # Панель слоев
-│   │   ├── Dialogs             # Диалоговые окна
-│   │   └── CanvasInputHandler  # Обработка ввода
-│   │
-│   └── Setup/                  # Настройка
-│       └── MapEditorSetup      # Автоматическое создание UI
+│   ├── Core/
+│   │   ├── EditorState.cs         — состояние редактора
+│   │   ├── MapEditorController.cs — главный контроллер
+│   │   ├── TileMapRenderer.cs     — рендеринг спрайтов + превью
+│   │   └── EditorInputHandler.cs  — обработка ввода
+│   ├── Data/
+│   │   ├── MapData.cs             — структуры данных карты
+│   │   └── TilePalette.cs         — ScriptableObject палитры
+│   ├── Services/
+│   │   └── MapFileService.cs      — сохранение/загрузка JSON
+│   └── UI/
+│       └── MapEditorUIController.cs — UI Toolkit контроллер
+├── UI/
+│   ├── MapEditorUI.uxml           — разметка интерфейса
+│   └── MapEditorStyles.uss        — стили
+└── MapEditor.asmdef
 ```
 
-### Ключевые компоненты
+---
 
-#### MapEditorController
-Центральный контроллер, координирующий все подсистемы:
-- Управление состоянием редактора
-- Файловые операции
-- Управление инструментами
-- События для UI
-
-#### EditorState
-Контейнер состояния редактора:
-- Текущая карта
-- Активный слой и инструмент
-- Настройки отображения
-- Уровень масштабирования
-
-#### ChunkedMapRenderer
-Оптимизированный рендерер с чанковой системой:
-- GPU Instancing для отрисовки тайлов
-- Culling невидимых чанков
-- Поддержка карт до 2000x2000 тайлов
-
-## API Reference
-
-### MapEditorController
-
-```csharp
-// События
-event Action OnMapCreated;
-event Action OnMapLoaded;
-event Action OnMapSaved;
-event Action<string> OnError;
-event Action OnStateChanged;
-
-// Свойства
-EditorState State { get; }
-ToolManager Tools { get; }
-TilePalette Palette { get; }
-
-// Управление картой
-void CreateNewMap(string name, int width, int height);
-void SaveMap(string fileName = null);
-void LoadMap(string fileName);
-string[] GetAvailableMaps();
-bool DeleteMap(string fileName);
-
-// Слои
-void SetActiveLayer(LayerType layer);
-void SetLayerVisibility(LayerType layer, bool visible);
-void ClearLayer(LayerType layer);
-
-// Вид
-void ZoomIn();
-void ZoomOut();
-void SetZoom(float zoom);
-void ToggleGrid();
-void ToggleCollisions();
-void CenterView();
-
-// Инструменты
-void SetTool(EditorTool tool);
-void SelectTile(string tileId);
-void SelectEntity(string entityType);
-
-// Ввод
-void HandlePointerDown(Vector2Int tilePosition);
-void HandlePointerDrag(Vector2Int tilePosition);
-void HandlePointerUp(Vector2Int tilePosition);
-```
-
-### MapFileService
-
-```csharp
-// Асинхронные операции
-Task<FileOperationResult> SaveMapAsync(MapData data, string fileName, CancellationToken ct);
-Task<FileOperationResult> LoadMapAsync(string fileName, CancellationToken ct);
-
-// Синхронные операции
-FileOperationResult SaveMap(MapData data, string fileName);
-FileOperationResult LoadMap(string fileName);
-
-// Утилиты
-string[] GetAvailableMaps();
-bool DeleteMap(string fileName);
-bool MapExists(string fileName);
-string GetMapsDirectory();
-```
-
-## Формат данных
-
-### JSON структура карты
+## Формат карты (JSON)
 
 ```json
 {
-  "mapName": "Level_01",
-  "version": "1.0",
-  "width": 100,
-  "height": 50,
-  "tileSize": 1.0,
-  "createdAt": 1700000000,
-  "modifiedAt": 1700000000,
+  "mapName": "Level1",
+  "width": 50,
+  "height": 30,
   "layers": [
     {
-      "layerName": "Background",
-      "layerType": 0,
-      "sortingOrder": 0,
-      "isVisible": true,
-      "tiles": [
-        {
-          "x": 0,
-          "y": 0,
-          "tileId": "sky_blue",
-          "hasCollision": false
-        }
-      ]
-    },
-    {
-      "layerName": "Ground",
+      "name": "Ground",
       "layerType": 1,
       "sortingOrder": 1,
       "isVisible": true,
       "tiles": [
-        {
-          "x": 5,
-          "y": 3,
-          "tileId": "ground_grass",
-          "hasCollision": true
-        }
+        { "x": 5, "y": 3, "tileId": "grass", "hasCollision": true }
       ]
     }
   ],
   "entities": [
-    {
-      "entityId": "player_spawn_1",
-      "entityType": "player_spawn",
-      "posX": 2.5,
-      "posY": 5.5,
-      "customData": "{}"
-    }
-  ],
-  "metadata": {
-    "author": "",
-    "description": "",
-    "difficulty": "",
-    "estimatedPlayTime": 0,
-    "tags": []
-  }
+    { "entityId": "spawn_123", "entityType": "player_spawn", "x": 2, "y": 5 }
+  ]
 }
 ```
 
-### Создание палитры тайлов
+---
+
+## Интеграция с игрой
 
 ```csharp
-// Через ScriptableObject (рекомендуется)
-// Create > Map Editor > Tile Palette
+using MapEditor.Data;
+using MapEditor.Services;
 
-// Программно
-var palette = ScriptableObject.CreateInstance<TilePalette>();
-
-palette.tiles.Add(new TilePaletteEntry
+public class LevelLoader : MonoBehaviour
 {
-    tileId = "ground_grass",
-    displayName = "Grass",
-    category = "Ground",
-    defaultHasCollision = true,
-    previewColor = Color.green
-});
-
-palette.entities.Add(new EntityPaletteEntry
-{
-    entityType = "player_spawn",
-    displayName = "Player Spawn",
-    category = "Player",
-    gizmoColor = Color.green,
-    size = Vector2.one
-});
-```
-
-## Оптимизация
-
-### Производительность рендеринга
-
-Модуль использует несколько техник оптимизации:
-
-1. **Чанковая система**: Карта разбивается на чанки 16x16 тайлов
-2. **Frustum Culling**: Отрисовываются только видимые чанки
-3. **GPU Instancing**: Батчинг до 1023 тайлов за один draw call
-4. **Кэширование**: O(1) доступ к тайлам через Dictionary
-
-### Производительность I/O
-
-1. **Асинхронные операции**: Неблокирующее чтение/запись
-2. **Большие буферы**: 64KB буферы для быстрого I/O
-3. **Отложенное построение кэшей**: Кэши строятся после загрузки
-
-### Тесты производительности
-
-| Размер карты | Загрузка | FPS (полный вид) | Память |
-|--------------|----------|------------------|--------|
-| 100x100      | <0.1s    | 60+              | ~5MB   |
-| 500x500      | ~0.5s    | 60+              | ~50MB  |
-| 1000x1000    | ~2s      | 60+              | ~150MB |
-
-## Горячие клавиши
-
-| Клавиша | Действие |
-|---------|----------|
-| B | Кисть |
-| E | Ластик |
-| V | Выбор сущности |
-| G | Показать/скрыть сетку |
-| C | Показать/скрыть коллизии |
-| +/- | Масштабирование |
-| Home | Центрировать вид |
-| Space + ЛКМ | Панорамирование |
-| СКМ | Панорамирование |
-| Delete | Удалить выбранную сущность |
-| Ctrl+S | Сохранить |
-| Ctrl+N | Новая карта |
-
-## Расширение функционала
-
-### Добавление нового инструмента
-
-```csharp
-public class FillTool : BaseTileTool
-{
-    public override EditorTool ToolType => EditorTool.Fill; // Добавьте в enum
-    public override string DisplayName => "Fill";
+    public TilePalette palette;
     
-    protected override void ApplyTool(Vector2Int position, EditorState state)
+    void LoadLevel(string name)
     {
-        // Реализация заливки
-        FloodFill(position, state);
-    }
-    
-    private void FloodFill(Vector2Int start, EditorState state)
-    {
-        // Алгоритм заливки
-    }
-}
-```
-
-### Добавление нового слоя
-
-```csharp
-// В LayerType enum добавьте:
-public enum LayerType
-{
-    Background = 0,
-    Ground = 1,
-    Foreground = 2,
-    Decorations = 3  // Новый слой
-}
-
-// При создании карты:
-map.layers.Add(new LayerData(LayerType.Decorations));
-```
-
-### Кастомные сущности
-
-```csharp
-// В палитре добавьте:
-palette.entities.Add(new EntityPaletteEntry
-{
-    entityType = "moving_platform",
-    displayName = "Moving Platform",
-    category = "Mechanics",
-    gizmoColor = Color.cyan,
-    size = new Vector2(3, 1)
-});
-
-// При загрузке уровня в игре:
-foreach (var entity in mapData.entities)
-{
-    switch (entity.entityType)
-    {
-        case "moving_platform":
-            var platform = Instantiate(platformPrefab, entity.Position, Quaternion.identity);
-            var customData = JsonUtility.FromJson<PlatformData>(entity.customData);
-            platform.Configure(customData);
-            break;
+        var service = new MapFileService();
+        var map = service.Load(name);
+        
+        foreach (var layer in map.layers)
+        {
+            foreach (var tile in layer.tiles)
+            {
+                var def = palette.GetTile(tile.tileId);
+                if (def?.sprite == null) continue;
+                
+                var go = new GameObject(tile.tileId);
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = def.sprite;
+                sr.sortingOrder = layer.sortingOrder;
+                
+                // Позиция на Vector2Int!
+                go.transform.position = new Vector3(
+                    tile.x + 0.5f, 
+                    tile.y + 0.5f, 
+                    0
+                );
+                
+                if (tile.hasCollision)
+                {
+                    go.AddComponent<BoxCollider2D>();
+                }
+            }
+        }
     }
 }
 ```
 
-## Лицензия
+---
 
-MIT License
+## Особенности
+
+- **Превью под курсором** — полупрозрачный спрайт показывает, где будет поставлен тайл
+- **Vector2Int координаты** — все тайлы на целочисленных позициях
+- **UI Toolkit** — современный, масштабируемый интерфейс
+- **Спрайты** — тайлы отображаются как реальные спрайты, не цветные квадраты

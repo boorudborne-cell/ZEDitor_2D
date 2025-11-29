@@ -4,127 +4,111 @@ using UnityEngine;
 
 namespace MapEditor.Data
 {
-    /// <summary>
-    /// Main map data container - serialized to JSON
-    /// </summary>
+    [Serializable]
+    public class TileData
+    {
+        public int x;
+        public int y;
+        public string tileId;
+        public bool hasCollision;
+        
+        public Vector2Int Position
+        {
+            get => new Vector2Int(x, y);
+            set { x = value.x; y = value.y; }
+        }
+    }
+    
+    [Serializable]
+    public class EntityData
+    {
+        public string entityId;
+        public string entityType;
+        public int x;
+        public int y;
+        public string customData;
+        
+        public Vector2Int Position
+        {
+            get => new Vector2Int(x, y);
+            set { x = value.x; y = value.y; }
+        }
+    }
+    
+    public enum LayerType { Background = 0, Ground = 1, Foreground = 2 }
+    
+    [Serializable]
+    public class LayerData
+    {
+        public string name;
+        public int layerType;
+        public int sortingOrder;
+        public bool isVisible = true;
+        public List<TileData> tiles = new List<TileData>();
+        
+        [NonSerialized] private Dictionary<Vector2Int, TileData> _cache;
+        
+        public LayerType Type => (LayerType)layerType;
+        
+        public void BuildCache()
+        {
+            _cache = new Dictionary<Vector2Int, TileData>();
+            foreach (var t in tiles) _cache[t.Position] = t;
+        }
+        
+        public TileData GetTile(Vector2Int pos)
+        {
+            if (_cache == null) BuildCache();
+            return _cache.TryGetValue(pos, out var t) ? t : null;
+        }
+        
+        public void SetTile(TileData tile)
+        {
+            if (_cache == null) BuildCache();
+            var existing = GetTile(tile.Position);
+            if (existing != null) tiles.Remove(existing);
+            tiles.Add(tile);
+            _cache[tile.Position] = tile;
+        }
+        
+        public bool RemoveTile(Vector2Int pos)
+        {
+            if (_cache == null) BuildCache();
+            var tile = GetTile(pos);
+            if (tile == null) return false;
+            tiles.Remove(tile);
+            _cache.Remove(pos);
+            return true;
+        }
+        
+        public void Clear()
+        {
+            tiles.Clear();
+            _cache?.Clear();
+        }
+    }
+    
     [Serializable]
     public class MapData
     {
         public string mapName;
-        public string version;
+        public string version = "1.0";
         public int width;
         public int height;
-        public float tileSize;
-        public long createdAt;
-        public long modifiedAt;
-        public List<LayerData> layers;
-        public List<EntityData> entities;
-        public MapMetadata metadata;
+        public List<LayerData> layers = new List<LayerData>();
+        public List<EntityData> entities = new List<EntityData>();
         
-        public MapData()
+        public static MapData Create(string name, int w, int h)
         {
-            version = "1.0";
-            tileSize = 1f;
-            layers = new List<LayerData>();
-            entities = new List<EntityData>();
-            metadata = new MapMetadata();
-        }
-        
-        /// <summary>
-        /// Creates a new map with specified dimensions
-        /// </summary>
-        public static MapData CreateNew(string name, int width, int height, float tileSize = 1f)
-        {
-            var map = new MapData
-            {
-                mapName = name,
-                width = width,
-                height = height,
-                tileSize = tileSize,
-                createdAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                modifiedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            };
-            
-            // Create default layers
-            map.layers.Add(new LayerData(LayerType.Background));
-            map.layers.Add(new LayerData(LayerType.Ground));
-            map.layers.Add(new LayerData(LayerType.Foreground));
-            
+            var map = new MapData { mapName = name, width = w, height = h };
+            map.layers.Add(new LayerData { name = "Background", layerType = 0, sortingOrder = 0 });
+            map.layers.Add(new LayerData { name = "Ground", layerType = 1, sortingOrder = 1 });
+            map.layers.Add(new LayerData { name = "Foreground", layerType = 2, sortingOrder = 2 });
             return map;
         }
         
-        /// <summary>
-        /// Gets layer by type
-        /// </summary>
-        public LayerData GetLayer(LayerType type)
-        {
-            return layers.Find(l => l.Type == type);
-        }
+        public LayerData GetLayer(LayerType type) => layers.Find(l => l.Type == type);
         
-        /// <summary>
-        /// Builds all layer caches for fast lookups
-        /// </summary>
-        public void BuildAllCaches()
-        {
-            foreach (var layer in layers)
-            {
-                layer.BuildCache();
-            }
-        }
-        
-        /// <summary>
-        /// Marks the map as modified
-        /// </summary>
-        public void MarkModified()
-        {
-            modifiedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        }
-        
-        /// <summary>
-        /// Checks if position is within map bounds
-        /// </summary>
-        public bool IsInBounds(int x, int y)
-        {
-            return x >= 0 && x < width && y >= 0 && y < height;
-        }
-        
-        /// <summary>
-        /// Checks if position is within map bounds
-        /// </summary>
-        public bool IsInBounds(Vector2Int position)
-        {
-            return IsInBounds(position.x, position.y);
-        }
-        
-        /// <summary>
-        /// Gets total tile count across all layers
-        /// </summary>
-        public int GetTotalTileCount()
-        {
-            int count = 0;
-            foreach (var layer in layers)
-            {
-                count += layer.tiles.Count;
-            }
-            return count;
-        }
-    }
-    
-    /// <summary>
-    /// Additional map metadata
-    /// </summary>
-    [Serializable]
-    public class MapMetadata
-    {
-        public string author;
-        public string description;
-        public string difficulty;
-        public int estimatedPlayTime; // in seconds
-        public List<string> tags;
-        
-        public MapMetadata()
-        {
-            tags = new List<string>();
-        }
+        public void BuildCaches() { foreach (var l in layers) l.BuildCache(); }
     }
 }

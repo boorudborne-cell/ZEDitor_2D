@@ -1,0 +1,78 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/MapEditor/UI/MapEditorStyles.uss?fileID=7433441132597879392&amp;guid=92071e2391929594aa31faf1f2d643eb&amp;type=3#MapEditorStyles" />
+    <ui:VisualElement name="root" class="root">
+        <ui:VisualElement name="toolbar" class="toolbar">
+            <ui:VisualElement name="tools-group" class="tool-group">
+                <ui:Button name="btn-brush" text="Brush" class="tool-button selected" />
+                <ui:Button name="btn-eraser" text="Eraser" class="tool-button" />
+                <ui:Button name="btn-entity" text="Entity" class="tool-button" />
+            </ui:VisualElement>
+            <ui:VisualElement class="separator" />
+            <ui:VisualElement name="zoom-group" class="tool-group">
+                <ui:Button name="btn-zoom-out" text="-" class="tool-button small" />
+                <ui:Label name="zoom-label" text="100%" class="zoom-label" />
+                <ui:Button name="btn-zoom-in" text="+" class="tool-button small" />
+            </ui:VisualElement>
+            <ui:VisualElement class="separator" />
+            <ui:Toggle name="toggle-collision" text="Collisions" value="true" class="toolbar-toggle" />
+            <ui:VisualElement class="spacer" />
+            <ui:VisualElement name="file-group" class="tool-group">
+                <ui:Button name="btn-new" text="New" class="tool-button" />
+                <ui:Button name="btn-save" text="Save" class="tool-button" />
+                <ui:Button name="btn-load" text="Load" class="tool-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="main-content" class="main-content">
+            <ui:VisualElement name="left-sidebar" class="sidebar">
+                <ui:Label text="Layers" class="section-header" />
+                <ui:Button name="btn-layer-bg" text="Background" class="layer-button" />
+                <ui:Button name="btn-layer-ground" text="Ground" class="layer-button selected" />
+                <ui:Button name="btn-layer-fg" text="Foreground" class="layer-button" />
+                <ui:VisualElement class="separator-h" />
+                <ui:Button name="btn-clear-layer" text="Clear Layer" class="action-button danger" />
+            </ui:VisualElement>
+            <ui:VisualElement name="canvas-area" enabled="false" class="canvas-area" />
+            <ui:VisualElement name="right-sidebar" class="sidebar wide">
+                <ui:Label text="Tiles" class="section-header" />
+                <ui:DropdownField name="category-dropdown" label="Category" class="category-dropdown" />
+                <ui:ScrollView name="tile-scroll" class="tile-scroll">
+                    <ui:VisualElement name="tile-container" class="tile-container" />
+                </ui:ScrollView>
+                <ui:VisualElement class="separator-h" />
+                <ui:Label text="Entities" class="section-header" />
+                <ui:ScrollView name="entity-scroll" class="entity-scroll">
+                    <ui:VisualElement name="entity-container" class="tile-container" />
+                </ui:ScrollView>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="status-bar" class="status-bar">
+            <ui:Label name="status-text" text="Ready" class="status-text" />
+            <ui:Label name="position-text" text="Tile: --" class="status-text" />
+            <ui:Label name="map-info" text="No map" class="status-text right" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="new-map-dialog" class="dialog-overlay hidden">
+        <ui:VisualElement class="dialog">
+            <ui:Label text="Create New Map" class="dialog-title" />
+            <ui:TextField name="input-map-name" label="Name" value="NewMap" />
+            <ui:IntegerField name="input-width" label="Width" value="50" />
+            <ui:IntegerField name="input-height" label="Height" value="30" />
+            <ui:VisualElement class="dialog-buttons">
+                <ui:Button name="btn-dialog-cancel" text="Cancel" class="dialog-button" />
+                <ui:Button name="btn-dialog-create" text="Create" class="dialog-button primary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="load-dialog" class="dialog-overlay hidden">
+        <ui:VisualElement class="dialog">
+            <ui:Label text="Load Map" class="dialog-title" />
+            <ui:ScrollView class="file-list-scroll">
+                <ui:VisualElement name="file-list" class="file-list" />
+            </ui:ScrollView>
+            <ui:VisualElement class="dialog-buttons">
+                <ui:Button name="btn-load-cancel" text="Cancel" class="dialog-button" />
+                <ui:Button name="btn-load-confirm" text="Load" class="dialog-button primary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

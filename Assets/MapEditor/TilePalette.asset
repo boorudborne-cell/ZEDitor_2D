@@ -9,23 +9,113 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b00a870b163280845b7875a0e91b25fb, type: 3}
+  m_Script: {fileID: 11500000, guid: 9604204feb24fe448b14115d44113e82, type: 3}
   m_Name: TilePalette
   m_EditorClassIdentifier: 
   tiles:
-  - tileId: 1
-    displayName: pl_1
-    category: Ground
-    sprite: {fileID: -6618333283465600043, guid: 0aae0cc1f2945584993c28f2703dd39b, type: 3}
-    defaultHasCollision: 0
-    previewColor: {r: 0, g: 0, b: 0, a: 0}
+  - id: stone
+    displayName: Stone
+    category: ForeGround
+    sprite: {fileID: 7177645745438045467, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: stone_2
+    displayName: Stone_2
+    category: ForeGround
+    sprite: {fileID: 2129178418, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: water
+    displayName: Water
+    category: ForeGround
+    sprite: {fileID: 1417233190, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: water_2
+    displayName: Water_2
+    category: ForeGround
+    sprite: {fileID: -1532108069, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: water_3
+    displayName: Water_3
+    category: ForeGround
+    sprite: {fileID: 8467451, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: water_4
+    displayName: Water_4
+    category: ForeGround
+    sprite: {fileID: 999938830, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: water_5
+    displayName: Water_5
+    category: ForeGround
+    sprite: {fileID: -223091205, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: water_6
+    displayName: Water_6
+    category: ForeGround
+    sprite: {fileID: -1906599971, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: water_7
+    displayName: Water_7
+    category: ForeGround
+    sprite: {fileID: -573257310, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: tree_1
+    displayName: Tree_1
+    category: ForeGround
+    sprite: {fileID: 678757359, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: tree_2
+    displayName: Tree_2
+    category: ForeGround
+    sprite: {fileID: 243107659, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: grass
+    displayName: Grass
+    category: ForeGround
+    sprite: {fileID: 11198835, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: dirt_1
+    displayName: Dirt_1
+    category: ForeGround
+    sprite: {fileID: 7177645745438045467, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: dirt_1
+    displayName: Dirt_1
+    category: ForeGround
+    sprite: {fileID: 7177645745438045467, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: dirt_3
+    displayName: Dirt_3
+    category: ForeGround
+    sprite: {fileID: 1886326023, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: gravel_1
+    displayName: Gravel_1
+    category: ForeGround
+    sprite: {fileID: -520032334, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: gravel_2
+    displayName: Gravel_2
+    category: ForeGround
+    sprite: {fileID: 871448908, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: gravel_3
+    displayName: Gravel_3
+    category: ForeGround
+    sprite: {fileID: 375839919, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: badrock_1
+    displayName: Badrock_1
+    category: ForeGround
+    sprite: {fileID: 253184396, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: badrock_2
+    displayName: Badrock_2
+    category: ForeGround
+    sprite: {fileID: -1808960146, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
+  - id: badrock_2
+    displayName: Badrock_2
+    category: ForeGround
+    sprite: {fileID: -1808960146, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    hasCollision: 0
   entities: []
-  tileCategories:
-  - Ground
-  - Decoration
-  - Hazard
-  entityCategories:
-  - Player
-  - Enemy
-  - Collectible
-  - Trigger
