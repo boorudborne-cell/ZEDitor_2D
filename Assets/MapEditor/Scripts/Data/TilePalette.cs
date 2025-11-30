@@ -15,23 +15,25 @@ namespace MapEditor.Data
     }
     
     [Serializable]
-    public class EntityDefinition
+    public class PrefabDefinition
     {
         public string id;
         public string displayName;
         public string category;
+        public GameObject prefab;
         public Sprite icon;
-        public Color gizmoColor = Color.yellow;
+        public Color gizmoColor = Color.cyan;
+        public bool snapToGrid = true;
     }
     
     [CreateAssetMenu(fileName = "TilePalette", menuName = "Map Editor/Tile Palette")]
     public class TilePalette : ScriptableObject
     {
         public List<TileDefinition> tiles = new List<TileDefinition>();
-        public List<EntityDefinition> entities = new List<EntityDefinition>();
+        public List<PrefabDefinition> prefabs = new List<PrefabDefinition>();
         
         private Dictionary<string, TileDefinition> _tileCache;
-        private Dictionary<string, EntityDefinition> _entityCache;
+        private Dictionary<string, PrefabDefinition> _prefabCache;
         
         public TileDefinition GetTile(string id)
         {
@@ -39,10 +41,10 @@ namespace MapEditor.Data
             return _tileCache.TryGetValue(id, out var t) ? t : null;
         }
         
-        public EntityDefinition GetEntity(string id)
+        public PrefabDefinition GetPrefab(string id)
         {
-            if (_entityCache == null) BuildCache();
-            return _entityCache.TryGetValue(id, out var e) ? e : null;
+            if (_prefabCache == null) BuildCache();
+            return _prefabCache.TryGetValue(id, out var p) ? p : null;
         }
         
         public List<string> GetTileCategories()
@@ -52,16 +54,23 @@ namespace MapEditor.Data
             return new List<string>(cats);
         }
         
+        public List<string> GetPrefabCategories()
+        {
+            var cats = new HashSet<string>();
+            foreach (var p in prefabs) if (!string.IsNullOrEmpty(p.category)) cats.Add(p.category);
+            return new List<string>(cats);
+        }
+        
         private void BuildCache()
         {
             _tileCache = new Dictionary<string, TileDefinition>();
             foreach (var t in tiles) _tileCache[t.id] = t;
             
-            _entityCache = new Dictionary<string, EntityDefinition>();
-            foreach (var e in entities) _entityCache[e.id] = e;
+            _prefabCache = new Dictionary<string, PrefabDefinition>();
+            foreach (var p in prefabs) _prefabCache[p.id] = p;
         }
         
         private void OnEnable() => BuildCache();
-        private void OnValidate() => _tileCache = null;
+        private void OnValidate() { _tileCache = null; _prefabCache = null; }
     }
 }

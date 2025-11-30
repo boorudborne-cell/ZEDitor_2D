@@ -1,59 +1,112 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/MapEditor/UI/MapEditorStyles.uss?fileID=7433441132597879392&amp;guid=92071e2391929594aa31faf1f2d643eb&amp;type=3#MapEditorStyles" />
     <ui:VisualElement name="root" class="root">
+        <!-- TOOLBAR -->
         <ui:VisualElement name="toolbar" class="toolbar">
+            <!-- History (Undo/Redo) -->
+            <ui:VisualElement name="history-group" class="tool-group history-group">
+                <ui:Button name="btn-undo" text="↶" tooltip="Undo (Ctrl+Z)" class="history-button" />
+                <ui:Button name="btn-redo" text="↷" tooltip="Redo (Ctrl+Y)" class="history-button" />
+            </ui:VisualElement>
+            
+            <ui:VisualElement class="separator" />
+            
+            <!-- Tools -->
             <ui:VisualElement name="tools-group" class="tool-group">
-                <ui:Button name="btn-brush" text="Brush" class="tool-button selected" />
-                <ui:Button name="btn-eraser" text="Eraser" class="tool-button" />
-                <ui:Button name="btn-entity" text="Entity" class="tool-button" />
+                <ui:Button name="btn-brush" text="Brush" tooltip="Brush Tool (B)" class="tool-button selected" />
+                <ui:Button name="btn-eraser" text="Eraser" tooltip="Eraser Tool (E)" class="tool-button" />
+                <ui:Button name="btn-prefab" text="Prefab" tooltip="Prefab Tool (P)" class="tool-button" />
+                <ui:Button name="btn-eyedropper" text="◉" tooltip="Eyedropper (I)" class="tool-button small" />
             </ui:VisualElement>
+            
             <ui:VisualElement class="separator" />
+            
+            <!-- Zoom -->
             <ui:VisualElement name="zoom-group" class="tool-group">
-                <ui:Button name="btn-zoom-out" text="-" class="tool-button small" />
+                <ui:Button name="btn-zoom-out" text="−" tooltip="Zoom Out (-)" class="tool-button small" />
                 <ui:Label name="zoom-label" text="100%" class="zoom-label" />
-                <ui:Button name="btn-zoom-in" text="+" class="tool-button small" />
+                <ui:Button name="btn-zoom-in" text="+" tooltip="Zoom In (+)" class="tool-button small" />
             </ui:VisualElement>
+            
             <ui:VisualElement class="separator" />
-            <ui:Toggle name="toggle-collision" text="Collisions" value="true" class="toolbar-toggle" />
+            
+            <!-- Options -->
+            <ui:Toggle name="toggle-collision" text="Collisions" tooltip="Toggle Collision Display (C)" value="true" class="toolbar-toggle" />
+            <ui:Toggle name="toggle-grid" text="Grid" tooltip="Toggle Grid (G)" value="true" class="toolbar-toggle" />
+            
             <ui:VisualElement class="spacer" />
+            
+            <!-- Unsaved indicator -->
+            <ui:VisualElement name="unsaved-indicator" class="unsaved-indicator hidden" tooltip="Unsaved changes" />
+            
+            <!-- File operations -->
             <ui:VisualElement name="file-group" class="tool-group">
-                <ui:Button name="btn-new" text="New" class="tool-button" />
-                <ui:Button name="btn-save" text="Save" class="tool-button" />
-                <ui:Button name="btn-load" text="Load" class="tool-button" />
+                <ui:Button name="btn-new" text="New" tooltip="New Map (Ctrl+N)" class="tool-button" />
+                <ui:Button name="btn-save" text="Save" tooltip="Save Map (Ctrl+S)" class="tool-button" />
+                <ui:Button name="btn-load" text="Load" tooltip="Load Map (Ctrl+O)" class="tool-button" />
             </ui:VisualElement>
+            
+            <ui:VisualElement class="separator" />
+            
+            <!-- Play Mode -->
+            <ui:Button name="btn-play" text="▶ Play" tooltip="Play Mode (F5)" class="tool-button play-button" />
+            
+            <ui:Button name="btn-shortcuts" text="?" tooltip="Keyboard Shortcuts" class="tool-button small" style="margin-left: 8px;" />
         </ui:VisualElement>
+        
+        <!-- MAIN CONTENT -->
         <ui:VisualElement name="main-content" class="main-content">
+            <!-- Left Sidebar - Layers -->
             <ui:VisualElement name="left-sidebar" class="sidebar">
-                <ui:Label text="Layers" class="section-header" />
-                <ui:Button name="btn-layer-bg" text="Background" class="layer-button" />
-                <ui:Button name="btn-layer-ground" text="Ground" class="layer-button selected" />
-                <ui:Button name="btn-layer-fg" text="Foreground" class="layer-button" />
+                <ui:Label text="LAYERS" class="section-header" />
+                <ui:Button name="btn-layer-bg" text="Background" tooltip="Background Layer (1)" class="layer-button" />
+                <ui:Button name="btn-layer-ground" text="Ground" tooltip="Ground Layer (2)" class="layer-button selected" />
+                <ui:Button name="btn-layer-fg" text="Foreground" tooltip="Foreground Layer (3)" class="layer-button" />
+                
                 <ui:VisualElement class="separator-h" />
-                <ui:Button name="btn-clear-layer" text="Clear Layer" class="action-button danger" />
+                
+                <ui:Label text="ACTIONS" class="section-header" />
+                <ui:Button name="btn-clear-layer" text="Clear Layer" tooltip="Clear current layer" class="action-button danger" />
+                <ui:Button name="btn-fill-layer" text="Fill Layer" tooltip="Fill layer with selected tile" class="action-button" />
             </ui:VisualElement>
-            <ui:VisualElement name="canvas-area" enabled="false" class="canvas-area" />
+            
+            <!-- Canvas Area -->
+            <ui:VisualElement name="canvas-area" class="canvas-area" />
+            
+            <!-- Right Sidebar - Palette -->
             <ui:VisualElement name="right-sidebar" class="sidebar wide">
-                <ui:Label text="Tiles" class="section-header" />
+                <ui:Label text="TILES" class="section-header" />
                 <ui:DropdownField name="category-dropdown" label="Category" class="category-dropdown" />
                 <ui:ScrollView name="tile-scroll" class="tile-scroll">
                     <ui:VisualElement name="tile-container" class="tile-container" />
                 </ui:ScrollView>
+                
                 <ui:VisualElement class="separator-h" />
-                <ui:Label text="Entities" class="section-header" />
-                <ui:ScrollView name="entity-scroll" class="entity-scroll">
-                    <ui:VisualElement name="entity-container" class="tile-container" />
+                
+                <ui:Label text="PREFABS" class="section-header" />
+                <ui:ScrollView name="prefab-scroll" class="entity-scroll">
+                    <ui:VisualElement name="prefab-container" class="tile-container" />
                 </ui:ScrollView>
             </ui:VisualElement>
         </ui:VisualElement>
+        
+        <!-- STATUS BAR -->
         <ui:VisualElement name="status-bar" class="status-bar">
             <ui:Label name="status-text" text="Ready" class="status-text" />
-            <ui:Label name="position-text" text="Tile: --" class="status-text" />
-            <ui:Label name="map-info" text="No map" class="status-text right" />
+            <ui:Label name="position-text" text="Tile: --, --" class="status-text" />
+            <ui:Label name="layer-text" text="Layer: Ground" class="status-text" />
+            <ui:Label name="map-info" text="No map loaded" class="status-text right" />
         </ui:VisualElement>
+        
+        <!-- TOAST CONTAINER -->
+        <ui:VisualElement name="toast-container" class="toast-container" />
     </ui:VisualElement>
+    
+    <!-- NEW MAP DIALOG -->
     <ui:VisualElement name="new-map-dialog" class="dialog-overlay hidden">
         <ui:VisualElement class="dialog">
             <ui:Label text="Create New Map" class="dialog-title" />
+            <ui:Label text="Set up dimensions for your new map" class="dialog-subtitle" />
             <ui:TextField name="input-map-name" label="Name" value="NewMap" />
             <ui:IntegerField name="input-width" label="Width" value="50" />
             <ui:IntegerField name="input-height" label="Height" value="30" />
@@ -63,9 +116,12 @@
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
+    
+    <!-- LOAD DIALOG -->
     <ui:VisualElement name="load-dialog" class="dialog-overlay hidden">
         <ui:VisualElement class="dialog">
             <ui:Label text="Load Map" class="dialog-title" />
+            <ui:Label text="Select a map file to open" class="dialog-subtitle" />
             <ui:ScrollView class="file-list-scroll">
                 <ui:VisualElement name="file-list" class="file-list" />
             </ui:ScrollView>
@@ -73,6 +129,101 @@
                 <ui:Button name="btn-load-cancel" text="Cancel" class="dialog-button" />
                 <ui:Button name="btn-load-confirm" text="Load" class="dialog-button primary" />
             </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    
+    <!-- CONFIRM DIALOG (for unsaved changes) -->
+    <ui:VisualElement name="confirm-dialog" class="dialog-overlay hidden">
+        <ui:VisualElement class="dialog confirm-dialog">
+            <ui:Label name="confirm-title" text="Unsaved Changes" class="dialog-title" />
+            <ui:Label name="confirm-message" text="You have unsaved changes. Do you want to save before continuing?" class="confirm-message" />
+            <ui:VisualElement class="dialog-buttons">
+                <ui:Button name="btn-confirm-cancel" text="Cancel" class="dialog-button" />
+                <ui:Button name="btn-confirm-discard" text="Discard" class="dialog-button" />
+                <ui:Button name="btn-confirm-save" text="Save" class="dialog-button primary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    
+    <!-- KEYBOARD SHORTCUTS PANEL -->
+    <ui:VisualElement name="shortcuts-panel" class="shortcuts-panel hidden">
+        <ui:Label text="KEYBOARD SHORTCUTS" class="shortcuts-title" />
+        
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="B" class="shortcut-key" />
+            <ui:Label text="Brush Tool" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="E" class="shortcut-key" />
+            <ui:Label text="Eraser Tool" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="P" class="shortcut-key" />
+            <ui:Label text="Prefab Tool" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="I" class="shortcut-key" />
+            <ui:Label text="Eyedropper (Pick)" class="shortcut-desc" />
+        </ui:VisualElement>
+        
+        <ui:VisualElement class="separator-h" />
+        
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="1 / 2 / 3" class="shortcut-key" />
+            <ui:Label text="Switch Layer" class="shortcut-desc" />
+        </ui:VisualElement>
+        
+        <ui:VisualElement class="separator-h" />
+        
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="Ctrl+Z" class="shortcut-key" />
+            <ui:Label text="Undo" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="Ctrl+Y" class="shortcut-key" />
+            <ui:Label text="Redo" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="Ctrl+S" class="shortcut-key" />
+            <ui:Label text="Save" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="Ctrl+O" class="shortcut-key" />
+            <ui:Label text="Open/Load" class="shortcut-desc" />
+        </ui:VisualElement>
+        
+        <ui:VisualElement class="separator-h" />
+        
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="Space" class="shortcut-key" />
+            <ui:Label text="Pan (hold + drag)" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="Scroll" class="shortcut-key" />
+            <ui:Label text="Zoom In/Out" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="Home" class="shortcut-key" />
+            <ui:Label text="Center View" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="C" class="shortcut-key" />
+            <ui:Label text="Toggle Collisions" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="G" class="shortcut-key" />
+            <ui:Label text="Toggle Grid" class="shortcut-desc" />
+        </ui:VisualElement>
+        
+        <ui:VisualElement class="separator-h" />
+        
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="F5" class="shortcut-key" />
+            <ui:Label text="Play / Stop" class="shortcut-desc" />
+        </ui:VisualElement>
+        <ui:VisualElement class="shortcut-row">
+            <ui:Label text="Esc" class="shortcut-key" />
+            <ui:Label text="Stop Play Mode" class="shortcut-desc" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

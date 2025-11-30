@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9604204feb24fe448b14115d44113e82, type: 3}
-  m_Name: CoolPalette
+  m_Name: TilePalette
   m_EditorClassIdentifier: 
   tiles:
   - id: stone_1
