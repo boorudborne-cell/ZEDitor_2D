@@ -185,7 +185,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiDocument: {fileID: 207657478}
   controller: {fileID: 2023536851}
+  playModeController: {fileID: 890925740}
   defaultTileTexture: {fileID: 10305, guid: 0000000000000000f000000000000000, type: 0}
+  toastDuration: 3
 --- !u!1 &402440318
 GameObject:
   m_ObjectHideFlags: 0
@@ -231,6 +233,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 2023536851}
+  playModeController: {fileID: 890925740}
+  uiDocument: {fileID: 207657478}
   panKey: 32
   panSpeed: 0.01
   zoomSpeed: 0.5
@@ -505,8 +509,67 @@ MonoBehaviour:
   previewColor: {r: 1, g: 1, b: 1, a: 0.5}
   collisionTint: {r: 1, g: 0.5, b: 0.5, a: 0.3}
   boundsColor: {r: 1, g: 1, b: 1, a: 0.5}
-  boundsOutsideColor: {r: 0.1, g: 0.1, b: 0.1, a: 0.3}
   boundsLineWidth: 0.1
+  gridColor: {r: 1, g: 1, b: 1, a: 0.1}
+  gridLineWidth: 0.02
+  usePooling: 1
+  initialPoolSize: 100
+--- !u!1 &890925738
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 890925739}
+  - component: {fileID: 890925740}
+  m_Layer: 0
+  m_Name: PlayModeController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &890925739
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 890925738}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1742102031}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &890925740
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 890925738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 358a481527540fe4c95407368faf1104, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  editorController: {fileID: 2023536851}
+  tileMapRenderer: {fileID: 770684238}
+  palette: {fileID: 11400000, guid: d593fa49688839c4d9acd3cd94ae241c, type: 2}
+  playModeParent: {fileID: 0}
+  defaultPlayerPrefab: {fileID: 0}
+  defaultSpawnPoint: {x: 1, y: 1}
+  playerPrefabTag: Player
+  followPlayer: 1
+  cameraSmoothing: 5
+  cameraBoundsMargin: {x: 2, y: 2}
+  collisionMaterial: {fileID: 0}
+  collisionLayer: Default
 --- !u!1 &1742102030
 GameObject:
   m_ObjectHideFlags: 0
@@ -541,6 +604,7 @@ Transform:
   - {fileID: 402440319}
   - {fileID: 207657477}
   - {fileID: 519420032}
+  - {fileID: 890925739}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2023536849
@@ -590,6 +654,7 @@ MonoBehaviour:
   palette: {fileID: 11400000, guid: d593fa49688839c4d9acd3cd94ae241c, type: 2}
   defaultWidth: 32
   defaultHeight: 32
+  maxUndoSteps: 50
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

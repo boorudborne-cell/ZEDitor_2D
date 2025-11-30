@@ -118,4 +118,11 @@ MonoBehaviour:
     category: ForeGround
     sprite: {fileID: -1808960146, guid: df4fe858ba688c24a843499d1340b004, type: 3}
     hasCollision: 0
-  entities: []
+  prefabs:
+  - id: obj_1
+    displayName: TestObj
+    category: 
+    prefab: {fileID: 2279230708887855155, guid: dda4511a0b7ab9b4ca0f6a63263d3d52, type: 3}
+    icon: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+    gizmoColor: {r: 1, g: 1, b: 1, a: 1}
+    snapToGrid: 0
