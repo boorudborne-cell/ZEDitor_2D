@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9604204feb24fe448b14115d44113e82, type: 3}
-  m_Name: TilePalette
+  m_Name: CoolPalette
   m_EditorClassIdentifier: 
   tiles:
-  - id: stone
-    displayName: Stone
+  - id: stone_1
+    displayName: Stone_1
     category: ForeGround
-    sprite: {fileID: 7177645745438045467, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    sprite: {fileID: -705284579, guid: df4fe858ba688c24a843499d1340b004, type: 3}
     hasCollision: 0
   - id: stone_2
     displayName: Stone_2
@@ -78,10 +78,10 @@ MonoBehaviour:
     category: ForeGround
     sprite: {fileID: 7177645745438045467, guid: df4fe858ba688c24a843499d1340b004, type: 3}
     hasCollision: 0
-  - id: dirt_1
-    displayName: Dirt_1
+  - id: dirt_2
+    displayName: Dirt_2
     category: ForeGround
-    sprite: {fileID: 7177645745438045467, guid: df4fe858ba688c24a843499d1340b004, type: 3}
+    sprite: {fileID: 1036685179, guid: df4fe858ba688c24a843499d1340b004, type: 3}
     hasCollision: 0
   - id: dirt_3
     displayName: Dirt_3
